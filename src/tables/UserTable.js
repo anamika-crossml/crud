@@ -11,34 +11,43 @@ import React from "react";
 
 const UserTable = (props) => {
   return (
-    <Paper style={{ marginRight: "20px" }}>
+    <Paper style={{  marginTop: "20px", marginLeft: '20px', marginRight: '20px' }}>
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell align="right">Username</TableCell>
-            <TableCell align="right">Actions</TableCell>
+            <TableCell >First Name</TableCell>
+            <TableCell >Last Name</TableCell>
+            <TableCell >Email</TableCell>
+            <TableCell >Phone Number</TableCell>
+            <TableCell >Age</TableCell>
+            <TableCell >Qualification Details</TableCell>
+            <TableCell >Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {props.users.length > 0 ? (
             props.users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>{user.name}</TableCell>
-                <TableCell align="right">{user.username}</TableCell>
-                <TableCell align="right">
+                <TableCell>{user.first_name}</TableCell>
+                <TableCell>{user.last_name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.phone_number}</TableCell>
+                <TableCell>{user.age}</TableCell>
+                <TableCell>{user.qualification_details}</TableCell>
+                <TableCell>
                   <Button
                     onClick={() => {
                       props.editRow(user);
                     }}
                     variant="contained"
-                    style={{ maxWidth: "70px" }}
+                    style={{ marginRight: '20px' }}
+                    size="medium"
                   >
                     Edit
                   </Button>
                   <Button
                     variant="contained"
-                    style={{ maxWidth: "70px" }}
+                    size="medium"
                     onClick={() => props.deleteUser(user.id)}
                   >
                     Delete
