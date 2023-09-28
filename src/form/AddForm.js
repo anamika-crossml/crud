@@ -1,108 +1,60 @@
+import React, { useState } from "react";
 import {
   Button,
   Grid,
-  TextField,
   Modal,
   Paper,
   Typography,
+  TextField,
 } from "@mui/material";
-import React, { useState } from "react";
-import InputMask from "react-input-mask";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
+import InputMask from "react-input-mask";
+
+const validationSchema = Yup.object().shape({
+  first_name: Yup.string()
+    .min(2, "Too Short!")
+    .max(50, "Too Long!")
+    .matches(/^[A-Za-z]+$/, "Only alphabets are allowed for First Name")
+    .required("First Name is required"),
+  last_name: Yup.string()
+    .min(2, "Too Short!")
+    .max(50, "Too Long!")
+    .matches(/^[A-Za-z]+$/, "Only alphabets are allowed for Last Name")
+    .required("Last Name is required"),
+  email: Yup.string()
+    .email("Invalid email format")
+    .required("Email is required"),
+  age: Yup.number()
+  .typeError("Age must be a number")
+    .required("Age is required")
+    .positive("Age must be positive")
+    .integer("Age must be an integer"),
+  phone_number: Yup.string().required("Phone Number is required"),
+  qualification_details: Yup.string().matches(
+    /^[A-Za-z\s]+$/,
+    "Only alphabets and spaces are allowed for Qualification Details"),
+});
 
 const AddForm = (props) => {
-  const initialState = {
-    id: null,
-    first_name: "",
-    last_name: "",
-    email: "",
-    age: "",
-    phone_number: "",
-    qualification_details: "",
-  };
 
-  const validationSchema = Yup.object().shape({
-    first_name: Yup.string()
-      .min(2, "Too Short!")
-      .max(50, "Too Long!")
-      .matches(/^[A-Za-z]+$/, "First Name should contain only alphabets")
-      .required("First Name is Required"),
-    last_name: Yup.string()
-      .required("Last Name is required")
-      .matches(/^[A-Za-z]+$/, "Last Name should contain only alphabets"),
-    email: Yup.string()
-      .required("Email is required")
-      .email("Invalid email address"),
-    age: Yup.number()
-      .required("Age is required")
-      .positive("Age must be a positive number")
-      .integer("Age must be an integer")
-      .typeError("Age must be a number"),
-  });
-
-  const [user, setUser] = useState(initialState);
-  const [open, setOpen] = useState(false);
-  const [showQualificationDetails, setShowQualificationDetails] =
-    useState(false);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setUser({ ...user, [name]: value });
+  const [showQualificationDetails, setShowQualificationDetails] = useState(false);
+  
+  const resetForm = () => {
+    setShowQualificationDetails(false);
   };
 
   const handleClose = () => {
-    setOpen(false);
-    setShowQualificationDetails(false);
-    setUser(initialState);
-  };
-
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  const handleSave = (values) => {
-    console.log("Save button clicked");
-    if (!showQualificationDetails) {
-      setShowQualificationDetails(true);
-    } else if (values.qualification_details) {
-      props.addUser(values);
-      handleClose();
-    }
-  };
-
-  
-
-  const handleCancel = () => {
-    setOpen(false);
-    setShowQualificationDetails(false);
-    setUser(initialState);
-  };
-
-  const renderQualificationDetailsForm = () => {
-    if (showQualificationDetails) {
-      return (
-        <Grid>
-          <TextField
-            type="text"
-            label="Qualification Details"
-            name="qualification_details"
-            variant="outlined"
-            size="small"
-            value={user.qualification_details}
-            style={{ marginTop: "20px" }}
-            onChange={handleInputChange}
-          />
-        </Grid>
-      );
-    }
-    return null;
+    props.setOpen(false);
   };
 
   return (
     <>
       <Button
-        onClick={handleOpen}
+        onClick={() => {
+          props.handleOpen();
+          resetForm();
+        }}
         variant="contained"
         color="primary"
         style={{ marginTop: "20px", marginLeft: "700px" }}
@@ -112,7 +64,7 @@ const AddForm = (props) => {
       </Button>
       <Modal
         onClose={handleClose}
-        open={open}
+        open={props.open}
         style={{
           display: "flex",
           justifyContent: "center",
@@ -123,173 +75,216 @@ const AddForm = (props) => {
       >
         <Paper elevation={3} style={{ padding: "20px", maxWidth: "400px" }}>
           <Formik
-            initialValues={initialState}
+            initialValues={{
+              first_name: "",
+              last_name: "",
+              email: "",
+              age: "",
+              phone_number: "",
+              qualification_details: "",
+            }}
             validationSchema={validationSchema}
             onSubmit={(values) => {
               if (!showQualificationDetails) {
                 setShowQualificationDetails(true);
               } else {
-                validationSchema
-                  .validate(values, { abortEarly: false })
-                  // .then(() => {
-                  //   handleSave(values);
-                  // })
-                  .catch((errors) => {
-                    console.error(errors);
-                  });
+                props.addUser(values);
+                handleClose();
               }
             }}
           >
-            {(errors, touched ) => (
+            {(formikProps) => (
               <Form>
                 <Grid>
                   <Typography
                     variant="h5"
                     sx={{ fontWeight: "bold", marginLeft: "20px" }}
                   >
-                    {showQualificationDetails
+                    {formikProps.values.qualification_details
                       ? "Qualification Details"
                       : "Personal Details "}
                   </Typography>
                 </Grid>
                 <Grid>
-                  {showQualificationDetails ? (
-                    <Typography
-                      variant="body1"
-                      style={{ marginTop: "20px" }}
-                    >
-                      First Name: {user.first_name}
+                {showQualificationDetails ? (
+                    <Typography variant="body1" style={{ marginTop: "20px" }}>
+                      First Name: {formikProps.values.first_name}
                     </Typography>
                   ) : (
-                    <TextField
-                      type="text"
-                      label="First Name"
-                      name="first_name"
-                      variant="outlined"
-                      size="small"
-                      value={user.first_name}
-                      style={{ marginTop: "20px" }}
-                      onChange={handleInputChange}
-                    />
-                  )}
-                    {errors.first_name && touched.first_name ? (
-            <div>{errors.first_name}</div>
-           ) : null}
-                  
-                </Grid>
-                <Grid>
-                  {showQualificationDetails ? (
-                    <Typography
-                      variant="body1"
-                      style={{ marginTop: "20px" }}
-                    >
-                      Last Name: {user.last_name}
-                    </Typography>
-                  ) : (
-                    <TextField
-                      size="small"
-                      type="text"
-                      name="last_name"
-                      label="Last name"
-                      variant="outlined"
-                      value={user.last_name}
-                      style={{ marginTop: "20px" }}
-                      onChange={handleInputChange}
-                    />
-                  )}
-                    {errors.last_name && touched.last_nameirst_name ? (
-            <div>{errors.last_name}</div>
-           ) : null}
-                </Grid>
-                <Grid>
-                  {showQualificationDetails ? (
-                    <Typography
-                      variant="body1"
-                      style={{ marginTop: "20px" }}
-                    >
-                      Email: {user.email}
-                    </Typography>
-                  ) : (
-                    <TextField
-                      type="text"
-                      label="Email"
-                      name="email"
-                      variant="outlined"
-                      size="small"
-                      value={user.email}
-                      style={{ marginTop: "20px" }}
-                      onChange={handleInputChange}
-                    />
-                  )}
-                     {errors.email && touched.email ? (
-            <div>{errors.email}</div>
-           ) : null}
-                </Grid>
-                <Grid>
-                  {showQualificationDetails ? (
-                    <Typography
-                      variant="body1"
-                      style={{ marginTop: "20px" }}
-                    >
-                      Phone Number: {user.phone_number}
-                    </Typography>
-                  ) : (
-                    <InputMask
-                      mask="+91 (999) 999-9999"
-                      maskChar=""
-                      value={user.phone_number}
-                      onChange={handleInputChange}
-                    >
-                      {() => (
-                        <TextField
-                          type="tel"
-                          label="Phone Number"
-                          name="phone_number"
-                          variant="outlined"
-                          size="small"
-                          style={{ marginTop: "20px" }}
-                        />
-                      )}
-                    </InputMask>
+                  <TextField
+                    type="text"
+                    label="First Name"
+                    name="first_name"
+                    variant="outlined"
+                    size="small"
+                    style={{ marginTop: "20px" }}
+                    value={formikProps.values.first_name}
+                    onChange={formikProps.handleChange}
+                    error={
+                      formikProps.touched.first_name &&
+                      Boolean(formikProps.errors.first_name)
+                    }
+                    helperText={
+                      formikProps.touched.first_name &&
+                      formikProps.errors.first_name
+                    }
+                    InputProps={{
+                      readOnly: showQualificationDetails,
+                    }}
+                  />
                   )}
                 </Grid>
                 <Grid>
-                  {showQualificationDetails ? (
-                    <Typography
-                      variant="body1"
-                      style={{ marginTop: "20px" }}
-                    >
-                      Age: {user.age}
+                {showQualificationDetails ? (
+                    <Typography variant="body1" style={{ marginTop: "20px" }}>
+                      Last Name: {formikProps.values.last_name}
                     </Typography>
                   ) : (
-                    <TextField
-                      type="text"
-                      label="Age"
-                      name="age"
-                      variant="outlined"
-                      size="small"
-                      value={user.age}
-                      style={{ marginTop: "20px" }}
-                      onChange={handleInputChange}
-                    />
+                  <TextField
+                    size="small"
+                    type="text"
+                    name="last_name"
+                    label="Last name"
+                    variant="outlined"
+                    style={{ marginTop: "20px" }}
+                    value={formikProps.values.last_name}
+                    onChange={formikProps.handleChange}
+                    error={
+                      formikProps.touched.last_name &&
+                      Boolean(formikProps.errors.last_name)
+                    }
+                    helperText={
+                      formikProps.touched.last_name &&
+                      formikProps.errors.last_name
+                    }
+                    InputProps={{
+                      readOnly: showQualificationDetails,
+                    }}
+                  />
                   )}
-                    {errors.age && touched.age ? (
-            <div>{errors.age}</div>
-           ) : null}
                 </Grid>
-                {renderQualificationDetailsForm()}
+                <Grid>
+                {showQualificationDetails ? (
+                    <Typography variant="body1" style={{ marginTop: "20px" }}>
+                      Email: {formikProps.values.email}
+                    </Typography>
+                  ) : (
+                  <TextField
+                    type="text"
+                    label="Email"
+                    name="email"
+                    variant="outlined"
+                    size="small"
+                    style={{ marginTop: "20px" }}
+                    value={formikProps.values.email}
+                    onChange={formikProps.handleChange}
+                    error={
+                      formikProps.touched.email &&
+                      Boolean(formikProps.errors.email)
+                    }
+                    helperText={
+                      formikProps.touched.email && formikProps.errors.email
+                    }
+                    InputProps={{
+                      readOnly: showQualificationDetails,
+                    }}
+                  />
+                  )}
+                </Grid>
+                <Grid>
+                {showQualificationDetails ? (
+                    <Typography variant="body1" style={{ marginTop: "20px" }}>
+                      Phone Number: {formikProps.values.phone_number}
+                    </Typography>
+                  ) : (
+                  <InputMask
+                    mask="+91 (999) 999-9999"
+                    maskChar=""
+                    value={formikProps.values.phone_number}
+                    onChange={formikProps.handleChange}
+                  >
+                    {() => (
+                      <TextField
+                        type="tel"
+                        label="Phone Number"
+                        name="phone_number"
+                        variant="outlined"
+                        size="small"
+                        style={{ marginTop: "20px" }}
+                        error={
+                          formikProps.touched.phone_number &&
+                          Boolean(formikProps.errors.phone_number)
+                        }
+                        helperText={
+                          formikProps.touched.phone_number &&
+                          formikProps.errors.phone_number
+                        }
+                        InputProps={{
+                          readOnly: showQualificationDetails,
+                        }}
+                      />
+                    )}
+                  </InputMask>
+                   )}
+                </Grid>
+                <Grid>
+                {showQualificationDetails ? (
+                    <Typography variant="body1" style={{ marginTop: "20px" }}>
+                      Age: {formikProps.values.age}
+                    </Typography>
+                  ) : (
+                  <TextField
+                    type="text"
+                    label="Age"
+                    name="age"
+                    variant="outlined"
+                    size="small"
+                    style={{ marginTop: "20px" }}
+                    value={formikProps.values.age}
+                    onChange={formikProps.handleChange}
+                    error={
+                      formikProps.touched.age && Boolean(formikProps.errors.age)
+                    }
+                    helperText={
+                      formikProps.touched.age && formikProps.errors.age
+                    }
+                    InputProps={{
+                      readOnly: showQualificationDetails,
+                    }}
+                  />
+                  )}
+                </Grid>
+                {showQualificationDetails && (
+        <Grid>
+          <TextField
+            type="text"
+            label="Qualification Details"
+            name="qualification_details"
+            variant="outlined"
+            size="small"
+            style={{ marginTop: "20px" }}
+            value={formikProps.values.qualification_details}
+            onChange={formikProps.handleChange}
+            error={
+              formikProps.touched.qualification_details && Boolean(formikProps.errors.qualification_details)
+            }
+            helperText={
+              formikProps.touched.qualification_details && formikProps.errors.qualification_details
+            }
+          />
+        </Grid>
+      )}
                 <Button
                   type="submit"
                   variant="contained"
                   style={{ marginTop: "10px", marginLeft: "10px" }}
-                  onClick={handleSave}
                 >
                   Save
                 </Button>
                 <Button
                   variant="contained"
                   style={{ marginTop: "10px", marginLeft: "10px" }}
-                  onClick={handleCancel}
+                  onClick={handleClose}
                 >
                   Cancel
                 </Button>
@@ -303,3 +298,8 @@ const AddForm = (props) => {
 };
 
 export default AddForm;
+
+//s
+// .matches(
+  // /^[A-Za-z\s]+$/,
+  // "Only alphabets and spaces are allowed for Qualification Details"

@@ -49,12 +49,17 @@ function App() {
   const [users, setUsers] = useState(usersData);
   const [editing, setEditing] = useState(false);
   const [currentUser, setCurrentUser] = useState(initialState);
+  const [open, setOpen] = useState(false);
   
 
 
   const addUser = (user) => {
     user.id = users.length + 1;
     setUsers([...users, user]);
+  };
+
+  const handleOpen = () => {
+    setOpen(true);
   };
 
   const editRow = (user) => {
@@ -109,7 +114,7 @@ function App() {
     </Grid>
   ) : (
     <Grid item xs={6}>
-      <AddForm addUser={addUser} />
+     <AddForm addUser={addUser} handleOpen={handleOpen} open={open} setOpen={setOpen} />
     </Grid>
   )}
   <Grid item xs={12}>
